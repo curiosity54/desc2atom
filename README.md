@@ -3,7 +3,7 @@
 Reconstruct atomic environments from atom-density based descriptors. Many machine-learning potentials encode local geometry as a descriptor
 (power spectrum, bispectrum, ...). Here we probe the inverse question, namely,
 
-> given a descriptor, can we recover the neighbor positions that produced it?
+> given a descriptor, can we recover the atomic environment that could have produced it?
 
 The core workflow is as follows 
 1. **Target** — compute or load a descriptor for an environment.
@@ -51,13 +51,13 @@ The target descriptors is obtained as a linear interpolation between the descrip
 | `optimize_invert_stack_invert(...)` | Starts from an overcomplete set of atoms, collapses atoms that are along the same radial direction (i.e. those whose angular separation falls below a threshold), and refines until the descriptor loss is small. |
 | `results/coordination_interpolation/` | Output directory for XYZ frames, losses, and optimization details. |
 
-### Run it
+### Run it using
 
 ```bash
 python -m examples/interpolate_coordination_envs.py
 ```
 
-Hyperparameters are defined at the top of the file:
+Hyperparameters to compute the descriptor and for the reconstruction are defined at the top of the file
 
 - `NU` - correlation order (2 / 3 / 4) of the descriptor
 - `LMAX_BY_NU` - maximum angular channels per correlation order
@@ -71,7 +71,7 @@ Outputs for each seed are saved under
 results/coordination_interpolation/nu{NU}_lmax{L}_interpolation_seed{SEED}/
   recovered_frames.xyz
   best_losses.hickle
-  details/
+  details/ # intermediate atomic environments during optimization
 ```
 
 The recovered frames `recovered_frames.xyz` can be visualized in any molecular viewer. 
@@ -80,12 +80,11 @@ The recovered frames `recovered_frames.xyz` can be visualized in any molecular v
 
 ## Other examples
 
-Building on this example, other scripts in this repository more or less reuse the same idea
-with different targets:
+Other scripts in this repository build on this example and  more or less reuse the same idea:
 
 | Script | Target | Data |
 |---|---|---|
-| `examples/reconstruct_bailar.py` | Descriptor interpolation along the Bailar twist | `data/bailar_twist/actual_bailar_twist.xyz` |
+| `examples/reconstruct_bailar.py` | Recover atomic environments for descriptor interpolation and comapre with the geometric Bailar twist | `data/bailar_twist/actual_bailar_twist.xyz` |
 | `examples/reconstruct_qm9.py` | Recover descriptors corresponding to precomputed QM9 environment environments | `data/qm9/qm9_envs_crystalnn_every50.hickle` (+ feature hickle) |
 | `examples/invert_nu3_degen.py` | Recover environments that share accidentally bispectrum-degenerate | `data/boron/boron_10_pbeccpvdz.xyz` |
 
@@ -99,7 +98,7 @@ python -m examples/reconstruct_qm9.py --start 0 --stop 10
 ```
 To repeat the same reconstruction for environments from MP20 or tmQM, replace `ENVIRONMENTS_PATH` and `FEATURE_PATH` in `examples/reconstruct_qm9.py` with the corresponding files under `data/mp20/` and `data/tmqm/`.
 
-Accidental descriptor degeneracy (builds environments from the XYZ on first run):
+What happens when the descriptors are accidentally degenerate? We consider the example of B8 environments which are known to have bispectrum degeneracies and recover environments corresponding to the degenerate descriptors. From multiple optimizations, we compare if the resulting structures are close to one of the two known degenerate structures (builds environments from the XYZ on first run):
 
 ```bash
 python -m examples/invert_nu3_degen.py
