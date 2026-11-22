@@ -7,7 +7,7 @@ Reconstruct atomic environments from atom-density based descriptors. Many machin
 
 The core workflow is as follows 
 1. **Target** — compute or load a descriptor for an environment.
-2. **Invert** — optimize a set of points so that their descriptor matches the target.
+2. **Invert** — optimize a local environment (positions of neighboring atoms) so that the descriptor centered on the origin matches the target.
 3. **Inspect** — write recovered coordinates (XYZ) and the final loss.
 ---
 
@@ -38,7 +38,7 @@ octahedron          --> d1
 
 for t in [0, 1]:
     target = (1 - t) * d0 + t * d1     # interpolate in descriptor space
-    points <-- invert(target)            # recover coordinates
+    local_environment <-- invert(target)             # recover neighbor coordinates relative to the origin
 ```
 The target descriptors is obtained as a linear interpolation between the descriptors corresponding to the two endpoints. 
 
@@ -48,7 +48,7 @@ The target descriptors is obtained as a linear interpolation between the descrip
 |---|---|
 | `DescriptorCalculator` | Builds atom-density descriptors for given `(lmax, rcut, correlation_order)`. |
 | `compute_descriptor(...)` | Evaluates the descriptor on a tensor specifying the atomic environment. |
-| `optimize_invert_stack_invert(...)` | Starts from an overcomplete set of points, collapses atoms that are along the same radial direction (i.e. those whose angular separation falls below a threshold), and refines until the descriptor loss is small. |
+| `optimize_invert_stack_invert(...)` | Starts from an overcomplete set of atoms, collapses atoms that are along the same radial direction (i.e. those whose angular separation falls below a threshold), and refines until the descriptor loss is small. |
 | `results/coordination_interpolation/` | Output directory for XYZ frames, losses, and optimization details. |
 
 ### Run it
@@ -93,11 +93,11 @@ with different targets:
 python -m examples/reconstruct_bailar.py
 ```
 
-QM9 
-
+QM9:
 ```bash
 python -m examples/reconstruct_qm9.py --start 0 --stop 10
 ```
+To repeat the same reconstruction for environments from MP20 or tmQM, replace `ENVIRONMENTS_PATH` and `FEATURE_PATH` in `examples/reconstruct_qm9.py` with the corresponding files under `data/mp20/` and `data/tmqm/`.
 
 Accidental descriptor degeneracy (builds environments from the XYZ on first run):
 
